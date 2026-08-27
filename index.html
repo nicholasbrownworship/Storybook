@@ -159,6 +159,7 @@
       </form>
 
       <form id="add-edge-form" class="tab-panel hidden" data-tab="tab-edge">
+        <h3 id="edge-form-heading">New connection</h3>
         <label>From
           <select id="edge-from"></select>
         </label>
@@ -168,7 +169,10 @@
         <label>Label <span class="hint">(optional)</span>
           <input type="text" id="edge-label" placeholder="e.g. player refuses" />
         </label>
-        <button type="submit" class="topbar-btn">Create connection</button>
+        <div class="panel-actions">
+          <button type="submit" id="edge-submit-btn" class="topbar-btn">Create connection</button>
+          <button type="button" id="edge-delete-btn" class="topbar-btn danger hidden">Delete connection</button>
+        </div>
       </form>
     </div>
   </div>
