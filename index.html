@@ -15,11 +15,20 @@
     <form id="gate-form">
       <span class="eyebrow">FIRST MEASURE STUDIOS</span>
       <h1>Story Web</h1>
-      <p class="gate-sub">Enter the passcode to view and edit.</p>
+      <p class="gate-sub">Enter the passcode to view the story.</p>
       <input type="password" id="gate-passcode" placeholder="Passcode" required autofocus />
-      <input type="text" id="gate-name" placeholder="Your name (shown on your edits)" required />
+      <input type="text" id="gate-name" placeholder="Your name" required />
       <button type="submit" class="topbar-btn">Enter</button>
       <p id="gate-error" class="gate-error hidden">Wrong passcode. Try again.</p>
+    </form>
+
+    <form id="token-form" class="hidden">
+      <span class="eyebrow">EDITOR SIGN-IN</span>
+      <h1>Enable editing</h1>
+      <p class="gate-sub">Paste your GitHub access token. It's saved only in this browser, never uploaded anywhere.</p>
+      <input type="password" id="token-input" placeholder="github_pat_..." />
+      <button type="submit" class="topbar-btn">Save</button>
+      <button type="button" id="token-cancel" class="topbar-btn ghost">Cancel</button>
     </form>
   </div>
 
@@ -32,8 +41,9 @@
     <div id="topbar-controls">
       <div class="filter-group" id="act-filters"></div>
       <span id="sync-indicator">—</span>
-      <button id="add-point-btn" class="topbar-btn">+ Add</button>
+      <button id="add-point-btn" class="topbar-btn hidden">+ Add</button>
       <button id="export-btn" class="topbar-btn secondary">Export backup</button>
+      <button id="editor-toggle-btn" class="topbar-btn ghost">Editor sign-in</button>
     </div>
   </header>
 
