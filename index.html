@@ -10,7 +10,20 @@
 </head>
 <body>
 
-  <header id="topbar">
+  <!-- ===== passcode gate ===== -->
+  <div id="gate-overlay">
+    <form id="gate-form">
+      <span class="eyebrow">FIRST MEASURE STUDIOS</span>
+      <h1>Story Web</h1>
+      <p class="gate-sub">Enter the passcode to view and edit.</p>
+      <input type="password" id="gate-passcode" placeholder="Passcode" required autofocus />
+      <input type="text" id="gate-name" placeholder="Your name (shown on your edits)" required />
+      <button type="submit" class="topbar-btn">Enter</button>
+      <p id="gate-error" class="gate-error hidden">Wrong passcode. Try again.</p>
+    </form>
+  </div>
+
+  <header id="topbar" class="hidden">
     <div id="topbar-title">
       <span class="eyebrow">FIRST MEASURE STUDIOS</span>
       <h1>Story Web</h1>
@@ -18,14 +31,13 @@
 
     <div id="topbar-controls">
       <div class="filter-group" id="act-filters"></div>
-      <span id="save-indicator"></span>
+      <span id="sync-indicator">—</span>
       <button id="add-point-btn" class="topbar-btn">+ Add</button>
-      <button id="export-btn" class="topbar-btn secondary">Export data.js</button>
-      <button id="reset-btn" class="topbar-btn ghost">Reset to file</button>
+      <button id="export-btn" class="topbar-btn secondary">Export backup</button>
     </div>
   </header>
 
-  <main id="graph-wrap">
+  <main id="graph-wrap" class="hidden">
     <div id="graph"></div>
 
     <div id="legend">
@@ -48,6 +60,7 @@
       </div>
       <p id="panel-summary">—</p>
       <div id="panel-tags"></div>
+      <p class="panel-attribution" id="panel-attribution"></p>
       <div class="panel-actions">
         <button id="panel-edit-btn" class="topbar-btn secondary">Edit</button>
         <button id="panel-delete-btn" class="topbar-btn danger">Delete</button>
@@ -151,7 +164,7 @@
   </div>
 
 <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
-<script src="data.js"></script>
+<script src="github-config.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
