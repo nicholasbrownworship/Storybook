@@ -12,8 +12,9 @@ const STATUS_LABEL = { planned: "Planned", drafted: "Drafted", final: "Final" };
 
 const NAME_KEY = "storyweb_name";
 const AUTH_KEY = "storyweb_authed";
+const TOKEN_KEY = "storyweb_editor_token"; // only ever set in the editor's own browser
 
-// ================= passcode gate =================
+// ================= passcode gate (view access) =================
 
 async function sha256Hex(text) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
@@ -26,6 +27,13 @@ const gateError = document.getElementById("gate-error");
 
 let myName = localStorage.getItem(NAME_KEY) || "";
 
+function enterApp() {
+  gateOverlay.classList.add("hidden");
+  document.getElementById("topbar").classList.remove("hidden");
+  document.getElementById("graph-wrap").classList.remove("hidden");
+  boot();
+}
+
 async function tryEnter(passcode, name) {
   const hash = await sha256Hex(passcode);
   if (hash !== PASSCODE_HASH) {
@@ -35,10 +43,7 @@ async function tryEnter(passcode, name) {
   myName = name.trim() || "Someone";
   localStorage.setItem(NAME_KEY, myName);
   sessionStorage.setItem(AUTH_KEY, "1");
-  gateOverlay.classList.add("hidden");
-  document.getElementById("topbar").classList.remove("hidden");
-  document.getElementById("graph-wrap").classList.remove("hidden");
-  boot();
+  enterApp();
   return true;
 }
 
@@ -48,33 +53,73 @@ gateForm.addEventListener("submit", (e) => {
   tryEnter(document.getElementById("gate-passcode").value, document.getElementById("gate-name").value);
 });
 
-// if already verified this session, skip straight to the app
 if (sessionStorage.getItem(AUTH_KEY) === "1" && myName) {
-  gateOverlay.classList.add("hidden");
-  document.getElementById("topbar").classList.remove("hidden");
-  document.getElementById("graph-wrap").classList.remove("hidden");
-  boot();
+  enterApp();
 } else if (myName) {
   document.getElementById("gate-name").value = myName;
+}
+
+// ================= editor token (write access, local only) =================
+
+function getToken() { return localStorage.getItem(TOKEN_KEY) || ""; }
+function isEditor() { return !!getToken(); }
+
+const tokenForm = document.getElementById("token-form");
+
+document.getElementById("editor-toggle-btn").addEventListener("click", () => {
+  if (isEditor()) {
+    if (confirm("Sign out of editing on this browser? You can sign back in any time with your token.")) {
+      localStorage.removeItem(TOKEN_KEY);
+      applyEditorVisibility();
+    }
+    return;
+  }
+  gateForm.classList.add("hidden");
+  tokenForm.classList.remove("hidden");
+  gateOverlay.classList.remove("hidden");
+});
+
+document.getElementById("token-cancel").addEventListener("click", () => {
+  tokenForm.classList.add("hidden");
+  gateOverlay.classList.add("hidden");
+});
+
+tokenForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const token = document.getElementById("token-input").value.trim();
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  tokenForm.classList.add("hidden");
+  gateOverlay.classList.add("hidden");
+  document.getElementById("token-input").value = "";
+  applyEditorVisibility();
+});
+
+function applyEditorVisibility() {
+  const editing = isEditor();
+  document.getElementById("add-point-btn").classList.toggle("hidden", !editing);
+  document.getElementById("panel-edit-btn").classList.toggle("hidden", !editing);
+  document.getElementById("panel-delete-btn").classList.toggle("hidden", !editing);
+  document.getElementById("editor-toggle-btn").textContent = editing ? "Editor: on" : "Editor sign-in";
+  // faster, authenticated polling for the editor; slower, anonymous polling for viewers
+  restartPolling();
 }
 
 // ================= GitHub-backed storage =================
 
 const API_BASE = `https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_PATH}`;
 
-let remoteSha = null; // sha of the last-fetched version of story-data.json
+let remoteSha = null;
 let state = { nodes: [], edges: [] };
 
 function ghHeaders() {
-  return { Authorization: `Bearer ${GITHUB_TOKEN}`, Accept: "application/vnd.github+json" };
+  const h = { Accept: "application/vnd.github+json" };
+  const token = getToken();
+  if (token) h.Authorization = `Bearer ${token}`;
+  return h;
 }
 
-function b64EncodeUnicode(str) {
-  return btoa(unescape(encodeURIComponent(str)));
-}
-function b64DecodeUnicode(str) {
-  return decodeURIComponent(escape(atob(str)));
-}
+function b64EncodeUnicode(str) { return btoa(unescape(encodeURIComponent(str))); }
+function b64DecodeUnicode(str) { return decodeURIComponent(escape(atob(str))); }
 
 async function fetchRemote() {
   const res = await fetch(`${API_BASE}?ref=${GITHUB_BRANCH}&_=${Date.now()}`, { headers: ghHeaders() });
@@ -84,9 +129,8 @@ async function fetchRemote() {
   return JSON.parse(b64DecodeUnicode(json.content));
 }
 
-// Writes an updater(currentRemoteState) -> newState, with retry-on-conflict:
-// if someone else saved in between, refetch, reapply, retry once more.
 async function commitUpdate(updater, commitMessage) {
+  if (!isEditor()) { alert("Editing isn't enabled on this browser."); return false; }
   setSyncState("saving", "Saving…");
   for (let attempt = 0; attempt < 3; attempt++) {
     const latest = attempt === 0 ? state : await fetchRemote();
@@ -106,7 +150,7 @@ async function commitUpdate(updater, commitMessage) {
       setSyncState("saved", "Saved to repo");
       return true;
     }
-    if (res.status === 409 || res.status === 422) continue; // conflict: retry with fresh sha
+    if (res.status === 409 || res.status === 422) continue;
     setSyncState("error", "Save failed — retry");
     return false;
   }
@@ -159,12 +203,9 @@ function buildVisEdge(e) {
   };
 }
 
-// Diff-based render: only touches nodes/edges that actually changed, so
-// dragged positions and open panels aren't disturbed by a poll refresh.
 function renderFromState() {
   const nodeIds = new Set(state.nodes.map((n) => n.id));
   const existingIds = new Set(visNodes.getIds());
-
   state.nodes.forEach((n) => {
     const built = buildVisNode(n);
     if (existingIds.has(n.id)) visNodes.update(built);
@@ -190,6 +231,28 @@ function renderFromState() {
 // ================= boot =================
 
 let pollTimer = null;
+
+function restartPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  // authenticated (editor) browsers can poll quickly (5000 req/hr limit);
+  // anonymous (viewer) browsers stay well under GitHub's 60 req/hr limit
+  const interval = isEditor() ? 8000 : 75000;
+  pollTimer = setInterval(pollOnce, interval);
+}
+
+async function pollOnce() {
+  try {
+    const latest = await fetchRemote();
+    if (JSON.stringify(latest) !== JSON.stringify(state)) {
+      state = latest;
+      renderFromState();
+      setSyncState("saved", "Updated");
+      setTimeout(() => setSyncState("saved", "Up to date"), 2000);
+    }
+  } catch (e) {
+    console.warn("poll failed", e);
+  }
+}
 
 async function boot() {
   visNodes = new vis.DataSet([]);
@@ -222,8 +285,8 @@ async function boot() {
   }
   renderFromState();
   setSyncState("saved", "Up to date");
+  applyEditorVisibility();
 
-  // pulse force-branch nodes
   let pulseUp = true;
   setInterval(() => {
     pulseUp = !pulseUp;
@@ -231,21 +294,7 @@ async function boot() {
     if (updates.length) visNodes.update(updates);
   }, 900);
 
-  // poll for changes made elsewhere
-  pollTimer = setInterval(async () => {
-    try {
-      const latest = await fetchRemote();
-      if (JSON.stringify(latest) !== JSON.stringify(state)) {
-        state = latest;
-        renderFromState();
-        setSyncState("saved", "Updated from others");
-        setTimeout(() => setSyncState("saved", "Up to date"), 2000);
-      }
-    } catch (e) {
-      console.warn("poll failed", e);
-    }
-  }, POLL_INTERVAL_MS);
-
+  restartPolling();
   wireUI();
 }
 
@@ -283,6 +332,7 @@ function openPanelFor(nodeId, silent) {
 function showViewMode() { panelView.classList.remove("hidden"); panelEditForm.classList.add("hidden"); }
 
 function showEditMode() {
+  if (!isEditor()) return;
   const n = findNode(currentNodeId);
   if (!n) return;
   document.getElementById("edit-label").value = n.label;
@@ -307,7 +357,7 @@ function uniqueNodeId(base, currentState) {
 }
 function newEdgeId() { return "e_" + Math.random().toString(36).slice(2, 10); }
 
-// ================= wire up forms (called once, after boot) =================
+// ================= wire up forms =================
 
 function wireUI() {
   document.getElementById("panel-close").addEventListener("click", () => panel.classList.remove("open"));
@@ -348,10 +398,8 @@ function wireUI() {
     currentNodeId = null;
   });
 
-  // act filters
   refreshActFilters();
 
-  // add overlay
   const addOverlay = document.getElementById("add-overlay");
   document.getElementById("add-point-btn").addEventListener("click", () => {
     populateConnectDropdowns();
