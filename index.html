@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Story Web — First Measure Studios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header id="topbar">
+    <div id="topbar-title">
+      <span class="eyebrow">FIRST MEASURE STUDIOS</span>
+      <h1>Story Web</h1>
+    </div>
+
+    <div id="topbar-controls">
+      <div class="filter-group" id="act-filters"></div>
+      <button id="add-node-help" title="How to add a story point">+ Add point</button>
+    </div>
+  </header>
+
+  <main id="graph-wrap">
+    <div id="graph"></div>
+
+    <div id="legend">
+      <div class="legend-row"><span class="dot core"></span> Core</div>
+      <div class="legend-row"><span class="dot force"></span> Force branch</div>
+      <div class="legend-row"><span class="dot non-force"></span> Non-Force branch</div>
+    </div>
+  </main>
+
+  <aside id="panel" class="closed">
+    <button id="panel-close">&times;</button>
+    <div class="panel-eyebrow" id="panel-act">—</div>
+    <h2 id="panel-title">—</h2>
+    <div class="panel-meta">
+      <span id="panel-branch" class="chip">—</span>
+      <span id="panel-status" class="chip">—</span>
+    </div>
+    <p id="panel-summary">—</p>
+    <div id="panel-tags"></div>
+  </aside>
+
+  <div id="add-help-overlay" class="hidden">
+    <div id="add-help-card">
+      <button id="add-help-close">&times;</button>
+      <h3>Adding a story point</h3>
+      <p>Open <code>data.js</code> and add an object to <code>STORY_NODES</code>, then link it to an existing point by adding an object to <code>STORY_EDGES</code>. Reload the page — no build step.</p>
+      <pre>{
+  id: "new_scene",
+  label: "Short Title",
+  act: "Act 2",
+  branch: "core",
+  status: "planned",
+  summary: "What happens here.",
+  tags: ["Tank"]
+}</pre>
+    </div>
+  </div>
+
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<script src="data.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
