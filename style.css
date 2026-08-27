@@ -124,17 +124,94 @@ html, body {
   border: 1px solid #6B2E28;
 }
 
-#save-indicator {
+.hidden { display: none !important; }
+
+/* ---------- passcode gate ---------- */
+
+#gate-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 30%, #131924 0%, var(--void) 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+#gate-form {
+  width: 320px;
+  max-width: 88vw;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+
+#gate-form .eyebrow {
   font-family: var(--mono);
   font-size: 10px;
-  letter-spacing: 0.06em;
-  color: var(--ink-dim);
-  min-width: 90px;
-  text-align: right;
-  opacity: 0;
-  transition: opacity 0.3s;
+  letter-spacing: 0.16em;
+  color: var(--blue);
+  opacity: 0.8;
 }
-#save-indicator.show { opacity: 1; }
+
+#gate-form h1 {
+  margin: 2px 0 4px;
+  font-family: var(--mono);
+  font-size: 24px;
+  color: var(--ink);
+}
+
+.gate-sub {
+  font-size: 13px;
+  color: var(--ink-dim);
+  margin: 0 0 10px;
+}
+
+#gate-form input {
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--ink);
+  background: #10141B;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 11px 12px;
+  outline: none;
+  text-align: center;
+}
+#gate-form input:focus { border-color: var(--blue-dim); }
+
+#gate-form .topbar-btn {
+  margin-top: 6px;
+  padding: 11px;
+}
+
+.gate-error {
+  color: #E86A5A;
+  font-size: 12.5px;
+  font-family: var(--mono);
+}
+
+/* ---------- sync indicator ---------- */
+
+#sync-indicator {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--ink-dim);
+  min-width: 130px;
+  text-align: right;
+}
+#sync-indicator.state-saving { color: var(--amber); }
+#sync-indicator.state-saved { color: var(--blue); }
+#sync-indicator.state-error { color: #E86A5A; }
+
+.panel-attribution {
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--slate);
+}
 
 /* ---------- graph ---------- */
 
