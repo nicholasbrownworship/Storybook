@@ -18,7 +18,10 @@
 
     <div id="topbar-controls">
       <div class="filter-group" id="act-filters"></div>
-      <button id="add-node-help" title="How to add a story point">+ Add point</button>
+      <span id="save-indicator"></span>
+      <button id="add-point-btn" class="topbar-btn">+ Add</button>
+      <button id="export-btn" class="topbar-btn secondary">Export data.js</button>
+      <button id="reset-btn" class="topbar-btn ghost">Reset to file</button>
     </div>
   </header>
 
@@ -32,32 +35,118 @@
     </div>
   </main>
 
+  <!-- ===== side panel: view + edit a node ===== -->
   <aside id="panel" class="closed">
     <button id="panel-close">&times;</button>
-    <div class="panel-eyebrow" id="panel-act">—</div>
-    <h2 id="panel-title">—</h2>
-    <div class="panel-meta">
-      <span id="panel-branch" class="chip">—</span>
-      <span id="panel-status" class="chip">—</span>
+
+    <div id="panel-view">
+      <div class="panel-eyebrow" id="panel-act">—</div>
+      <h2 id="panel-title">—</h2>
+      <div class="panel-meta">
+        <span id="panel-branch" class="chip">—</span>
+        <span id="panel-status" class="chip">—</span>
+      </div>
+      <p id="panel-summary">—</p>
+      <div id="panel-tags"></div>
+      <div class="panel-actions">
+        <button id="panel-edit-btn" class="topbar-btn secondary">Edit</button>
+        <button id="panel-delete-btn" class="topbar-btn danger">Delete</button>
+      </div>
     </div>
-    <p id="panel-summary">—</p>
-    <div id="panel-tags"></div>
+
+    <form id="panel-edit-form" class="hidden">
+      <label>Title
+        <input type="text" id="edit-label" required />
+      </label>
+      <label>Act
+        <input type="text" id="edit-act" required placeholder="Act 1" />
+      </label>
+      <label>Branch
+        <select id="edit-branch">
+          <option value="core">Core</option>
+          <option value="force">Force branch</option>
+          <option value="non-force">Non-Force branch</option>
+        </select>
+      </label>
+      <label>Status
+        <select id="edit-status">
+          <option value="planned">Planned</option>
+          <option value="drafted">Drafted</option>
+          <option value="final">Final</option>
+        </select>
+      </label>
+      <label>Story notes
+        <textarea id="edit-summary" rows="8" required></textarea>
+      </label>
+      <label>Tags <span class="hint">(comma separated)</span>
+        <input type="text" id="edit-tags" />
+      </label>
+      <div class="panel-actions">
+        <button type="submit" class="topbar-btn">Save</button>
+        <button type="button" id="edit-cancel-btn" class="topbar-btn ghost">Cancel</button>
+      </div>
+    </form>
   </aside>
 
-  <div id="add-help-overlay" class="hidden">
-    <div id="add-help-card">
-      <button id="add-help-close">&times;</button>
-      <h3>Adding a story point</h3>
-      <p>Open <code>data.js</code> and add an object to <code>STORY_NODES</code>, then link it to an existing point by adding an object to <code>STORY_EDGES</code>. Reload the page — no build step.</p>
-      <pre>{
-  id: "new_scene",
-  label: "Short Title",
-  act: "Act 2",
-  branch: "core",
-  status: "planned",
-  summary: "What happens here.",
-  tags: ["Tank"]
-}</pre>
+  <!-- ===== add overlay: new point or new connection ===== -->
+  <div id="add-overlay" class="hidden">
+    <div id="add-card">
+      <button id="add-close">&times;</button>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="tab-point">New story point</button>
+        <button class="tab-btn" data-tab="tab-edge">New connection</button>
+      </div>
+
+      <form id="add-point-form" class="tab-panel" data-tab="tab-point">
+        <label>Title
+          <input type="text" id="new-label" required placeholder="Short scene title" />
+        </label>
+        <label>Act
+          <input type="text" id="new-act" required placeholder="Act 2" />
+        </label>
+        <label>Branch
+          <select id="new-branch">
+            <option value="core">Core</option>
+            <option value="force">Force branch</option>
+            <option value="non-force">Non-Force branch</option>
+          </select>
+        </label>
+        <label>Status
+          <select id="new-status">
+            <option value="planned">Planned</option>
+            <option value="drafted">Drafted</option>
+            <option value="final">Final</option>
+          </select>
+        </label>
+        <label>Story notes
+          <textarea id="new-summary" rows="6" placeholder="What happens here."></textarea>
+        </label>
+        <label>Tags <span class="hint">(comma separated)</span>
+          <input type="text" id="new-tags" placeholder="Mechanic, Tank" />
+        </label>
+        <label>Connect from <span class="hint">(optional)</span>
+          <select id="new-connect-from">
+            <option value="">— none —</option>
+          </select>
+        </label>
+        <label id="new-connect-label-wrap" class="hidden">Connection label <span class="hint">(optional)</span>
+          <input type="text" id="new-connect-label" placeholder="e.g. player opens holocron" />
+        </label>
+        <button type="submit" class="topbar-btn">Create point</button>
+      </form>
+
+      <form id="add-edge-form" class="tab-panel hidden" data-tab="tab-edge">
+        <label>From
+          <select id="edge-from"></select>
+        </label>
+        <label>To
+          <select id="edge-to"></select>
+        </label>
+        <label>Label <span class="hint">(optional)</span>
+          <input type="text" id="edge-label" placeholder="e.g. player refuses" />
+        </label>
+        <button type="submit" class="topbar-btn">Create connection</button>
+      </form>
     </div>
   </div>
 
