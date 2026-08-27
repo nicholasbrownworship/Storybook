@@ -460,6 +460,15 @@ html, body {
   border-bottom: 1px solid var(--line);
 }
 
+#edge-form-heading {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  margin: 0 0 4px;
+}
+
 .tab-btn {
   font-family: var(--mono);
   font-size: 11px;
