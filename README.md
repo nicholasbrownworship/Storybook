@@ -1,44 +1,44 @@
 # Storybook
 
-A personal planning tool: an interactive node graph for tracking story points in the FFG/UE5 Star Wars RPG and how they connect, including branch points (Force-sensitive vs. non-Force paths).
+A shared story-planning tool: an interactive node graph for tracking story points in the FFG/UE5 Star Wars RPG and how they connect, including branch points (Force-sensitive vs. non-Force paths).
 
 Live at: https://nicholasbrownworship.github.io/Storybook/
 
-No build step. It's plain HTML/CSS/JS plus one CDN library (vis-network) for the graph.
+No build step, no separate accounts to run it. Plain HTML/CSS/JS, vis-network from a CDN for the graph, and GitHub itself as the shared data store.
 
-## Running it locally
+## How access works
 
-Just open `index.html` in a browser. (If your browser blocks local file scripts, run a tiny local server instead: `python3 -m http.server` from this folder, then visit `http://localhost:8000`.)
+- **Passcode** — anyone with it can open the site and watch the story graph update live (polls every ~75 seconds). No account, no setup.
+- **Editing is separate and stays with Nick.** Click "Editor sign-in" in the top bar and paste a GitHub token to unlock the add/edit/delete tools on that one browser. The token is stored only in that browser's local storage — it's never written to any file, never committed, and isn't given out with the passcode.
+
+This split exists because GitHub actively blocks committing its own token format into any repo (there's no way around that), and a static site can't hold a write-capable secret from everyone who opens it — so only one browser is trusted with write access, and everyone else just watches it update.
+
+If you (Nick) need a fresh token: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → generate one scoped to **only this repo**, with **Contents: Read and write** permission, nothing else. Paste it into "Editor sign-in" once — you won't need to re-enter it unless you clear that browser's storage or sign out deliberately.
+
+To change the passcode, replace `PASSCODE_HASH` in `github-config.js` with the SHA-256 hex of the new one.
 
 ## Adding / editing story points
 
-Use the in-page editor: **+ Add** to create a new point or connection, click any node to view or **Edit** it, **Delete** to remove one. Every change auto-saves to your browser's local storage, so it survives refreshes and closing the tab — but it only lives in that one browser.
+With editing enabled: **+ Add** for a new point or connection, click any node to view or **Edit** it, **Delete** to remove one. Every save commits straight to `story-data.json` in this repo — that's the single source of truth everyone's browser reads from.
 
-`data.js` is the version everyone (and every browser/device) sees when they open the live site. To get your local edits into it:
+You can also hand-edit `story-data.json` directly if you prefer:
 
-1. Click **Export data.js** in the top bar — downloads the current state as a `data.js` file.
-2. Replace the repo's `data.js` with that file and commit/push (or ask Claude to push it, same as this deploy).
-3. Next time you or anyone else opens the site fresh (no local edits saved yet), it'll load from that updated `data.js`.
-
-**Reset to file** clears your local edits and reloads straight from `data.js` — useful right after you've pushed an export, so your browser and the repo agree again.
-
-You can still hand-edit `data.js` directly if you prefer code to forms — same object shape either way:
-
-```js
+```json
 {
-  id: "new_scene",
-  label: "Short Title",
-  act: "Act 2",
-  branch: "core",        // "core" | "force" | "non-force"
-  status: "planned",     // "planned" | "drafted" | "final"
-  summary: "What happens here.",
-  tags: ["Tank"]
+  "id": "new_scene",
+  "label": "Short Title",
+  "act": "Act 2",
+  "branch": "core",
+  "status": "planned",
+  "summary": "What happens here.",
+  "tags": ["Tank"]
 }
 ```
-```js
-{ from: "existing_node_id", to: "new_scene", label: "optional trigger text" }
-```
+
+## Running it locally
+
+Open `index.html` in a browser, or `python3 -m http.server` from this folder and visit `http://localhost:8000`.
 
 ## Deployment
 
-This repo's GitHub Pages is already configured to serve from the root of `main`, so these files live at the repo root — no subfolder, nothing extra to configure. Any push to `main` updates the live site within a minute or two.
+GitHub Pages serves from the root of `main`. Any push updates the live site within a minute or two.
