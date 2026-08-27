@@ -1,0 +1,77 @@
+{
+  "nodes": [
+    {
+      "id": "prison_break",
+      "label": "Prison Break",
+      "act": "Act 1",
+      "branch": "core",
+      "status": "drafted",
+      "summary": "Opening sequence. The whole crew wakes up captured on an Imperial Remnant ship, in separate cells. Smuggler is the player's cellmate (or is the player, if chosen) and helps them break out first. The rest of the crew is found and freed from nearby cells during the escape.",
+      "tags": ["Mechanic", "Smuggler", "Tank", "Ambassador", "tutorial"],
+      "updatedBy": "seed",
+      "updatedAt": null
+    },
+    {
+      "id": "post_tutorial",
+      "label": "Post-Tutorial: The Holocron",
+      "act": "Act 1",
+      "branch": "core",
+      "status": "planned",
+      "summary": "Right after the escape resolves. The crew doesn't get to just 'go home' — they walk away from the wreck with a holocron the prison ship was holding. The player character is the one who ends up with it (either it's obviously important when they spot it, or it's already stashed among their belongings by an unknown party). This is the seed of 'something bigger' — not galaxy-scale, but bigger than a prison break.",
+      "tags": ["holocron", "Mechanic", "macguffin"],
+      "updatedBy": "seed",
+      "updatedAt": null
+    },
+    {
+      "id": "why_mechanic_was_taken",
+      "label": "Why Mechanic Was Imprisoned",
+      "act": "Act 1",
+      "branch": "core",
+      "status": "planned",
+      "summary": "Mechanic was the original finder of the holocron before the story started, and didn't realize what they'd found. The Imperial Remnant did — that's why Mechanic specifically was captured. This can surface gradually rather than all at once.",
+      "tags": ["Mechanic", "holocron", "backstory"],
+      "updatedBy": "seed",
+      "updatedAt": null
+    },
+    {
+      "id": "force_pivot",
+      "label": "Force Sensitivity Pivot",
+      "act": "Act 2",
+      "branch": "core",
+      "status": "planned",
+      "summary": "The pivot point, roughly late Act 1 / early Act 2. Whoever is able to open the holocron is revealed as Force sensitive. Player gets first choice, available only up to this window — after it passes, the player can't choose it this playthrough. If the player takes it, all companions' Force-sensitive branches lock out. If not, the game rolls among eligible companions in the party.",
+      "tags": ["holocron", "Force Sensitivity", "branch point"],
+      "updatedBy": "seed",
+      "updatedAt": null
+    },
+    {
+      "id": "player_force_branch",
+      "label": "Player Goes Force-Sensitive",
+      "act": "Act 2",
+      "branch": "force",
+      "status": "planned",
+      "summary": "Player chose Force Sensitivity at the pivot. All companions play their non-Force branch content from here forward. Guardian/Sentinel/Consular subclass (Paladin/Ranger/Wizard chassis) is revealed later, after the player has committed to and 'proven' the Jedi path.",
+      "tags": ["Force Sensitivity", "player"],
+      "updatedBy": "seed",
+      "updatedAt": null
+    },
+    {
+      "id": "companion_force_branch",
+      "label": "A Companion Goes Force-Sensitive",
+      "act": "Act 2",
+      "branch": "non-force",
+      "status": "planned",
+      "summary": "Player did not take Force Sensitivity within the window. The game randomly rolls among eligible companions in the current party to determine which one (if any) is Force-sensitive this playthrough. That companion's Force-sensitive branch activates; the player and other companions stay on non-Force content.",
+      "tags": ["Force Sensitivity", "companions"],
+      "updatedBy": "seed",
+      "updatedAt": null
+    }
+  ],
+  "edges": [
+    { "id": "e_seed_1", "from": "prison_break", "to": "post_tutorial", "label": "" },
+    { "id": "e_seed_2", "from": "post_tutorial", "to": "why_mechanic_was_taken", "label": "" },
+    { "id": "e_seed_3", "from": "post_tutorial", "to": "force_pivot", "label": "story progresses" },
+    { "id": "e_seed_4", "from": "force_pivot", "to": "player_force_branch", "label": "player opens holocron" },
+    { "id": "e_seed_5", "from": "force_pivot", "to": "companion_force_branch", "label": "player does not" }
+  ]
+}
