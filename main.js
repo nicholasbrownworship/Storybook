@@ -271,8 +271,9 @@ async function boot() {
     }
   );
   network.on("click", (params) => {
-    if (params.nodes.length > 0) openPanelFor(params.nodes[0]);
-    else panel.classList.remove("open");
+    if (params.nodes.length > 0) { openPanelFor(params.nodes[0]); return; }
+    if (params.edges.length > 0) { openEdgeEditor(params.edges[0]); return; }
+    panel.classList.remove("open");
   });
 
   setSyncState("saving", "Loading…");
@@ -305,7 +306,37 @@ const panelView = document.getElementById("panel-view");
 const panelEditForm = document.getElementById("panel-edit-form");
 let currentNodeId = null;
 
-function findNode(id) { return state.nodes.find((n) => n.id === id); }
+function findEdge(id) { return state.edges.find((e) => e.id === id); }
+
+let currentEdgeId = null; // set when editing an existing connection; null when creating a new one
+
+function openEdgeEditor(edgeId) {
+  if (!isEditor()) return; // viewers can't edit; clicking an edge just does nothing for them
+  const edge = findEdge(edgeId);
+  if (!edge) return;
+  currentEdgeId = edgeId;
+  populateConnectDropdowns();
+  document.getElementById("edge-from").value = edge.from;
+  document.getElementById("edge-to").value = edge.to;
+  document.getElementById("edge-label").value = edge.label || "";
+  document.getElementById("edge-form-heading").textContent = "Edit connection";
+  document.getElementById("edge-submit-btn").textContent = "Save connection";
+  document.getElementById("edge-delete-btn").classList.remove("hidden");
+
+  // switch to the connection tab and open the overlay
+  document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach((p) => p.classList.add("hidden"));
+  document.querySelector('.tab-btn[data-tab="tab-edge"]').classList.add("active");
+  document.querySelector('.tab-panel[data-tab="tab-edge"]').classList.remove("hidden");
+  document.getElementById("add-overlay").classList.remove("hidden");
+}
+
+function resetEdgeFormToCreateMode() {
+  currentEdgeId = null;
+  document.getElementById("edge-form-heading").textContent = "New connection";
+  document.getElementById("edge-submit-btn").textContent = "Create connection";
+  document.getElementById("edge-delete-btn").classList.add("hidden");
+}
 
 function openPanelFor(nodeId, silent) {
   const n = findNode(nodeId);
@@ -403,10 +434,15 @@ function wireUI() {
   const addOverlay = document.getElementById("add-overlay");
   document.getElementById("add-point-btn").addEventListener("click", () => {
     populateConnectDropdowns();
+    resetEdgeFormToCreateMode();
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.add("hidden"));
+    document.querySelector('.tab-btn[data-tab="tab-point"]').classList.add("active");
+    document.querySelector('.tab-panel[data-tab="tab-point"]').classList.remove("hidden");
     addOverlay.classList.remove("hidden");
   });
-  document.getElementById("add-close").addEventListener("click", () => addOverlay.classList.add("hidden"));
-  addOverlay.addEventListener("click", (e) => { if (e.target === addOverlay) addOverlay.classList.add("hidden"); });
+  document.getElementById("add-close").addEventListener("click", () => { addOverlay.classList.add("hidden"); resetEdgeFormToCreateMode(); });
+  addOverlay.addEventListener("click", (e) => { if (e.target === addOverlay) { addOverlay.classList.add("hidden"); resetEdgeFormToCreateMode(); } });
 
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -414,6 +450,10 @@ function wireUI() {
       document.querySelectorAll(".tab-panel").forEach((p) => p.classList.add("hidden"));
       btn.classList.add("active");
       document.querySelector(`.tab-panel[data-tab="${btn.dataset.tab}"]`).classList.remove("hidden");
+      if (btn.dataset.tab === "tab-edge" && currentEdgeId === null) {
+        populateConnectDropdowns();
+        resetEdgeFormToCreateMode();
+      }
     });
   });
 
@@ -459,12 +499,33 @@ function wireUI() {
     if (!from || !to || from === to) { alert("Pick two different story points."); return; }
     const label = document.getElementById("edge-label").value.trim();
 
-    await commitUpdate((latest) => ({
-      ...latest,
-      edges: [...latest.edges, { id: newEdgeId(), from, to, label }],
-    }), `Connect points (${myName})`);
+    if (currentEdgeId) {
+      const id = currentEdgeId;
+      await commitUpdate((latest) => ({
+        ...latest,
+        edges: latest.edges.map((ed) => (ed.id === id ? { ...ed, from, to, label } : ed)),
+      }), `Edit connection (${myName})`);
+    } else {
+      await commitUpdate((latest) => ({
+        ...latest,
+        edges: [...latest.edges, { id: newEdgeId(), from, to, label }],
+      }), `Connect points (${myName})`);
+    }
 
     e.target.reset();
+    resetEdgeFormToCreateMode();
+    addOverlay.classList.add("hidden");
+  });
+
+  document.getElementById("edge-delete-btn").addEventListener("click", async () => {
+    if (!currentEdgeId) return;
+    if (!confirm("Delete this connection?")) return;
+    const id = currentEdgeId;
+    await commitUpdate((latest) => ({
+      ...latest,
+      edges: latest.edges.filter((ed) => ed.id !== id),
+    }), `Delete connection (${myName})`);
+    resetEdgeFormToCreateMode();
     addOverlay.classList.add("hidden");
   });
 
